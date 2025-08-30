@@ -38,24 +38,23 @@ def index():
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=True)
-                # Obtener el nombre del archivo descargado
                 filename = ydl.prepare_filename(info)
                 if download_type == 'audio':
-                    filename = filename.replace('.webm', '.mp3')  # Ajuste para audio
+                    filename = filename.replace('.webm', '.mp3')
                     filename = filename.replace('.m4a', '.mp3')
 
-            # Renombrar a algo único para evitar conflictos
-            unique_filename = f"{uuid.uuid4()}.{ext}"
-            unique_path = os.path.join(DOWNLOAD_FOLDER, unique_filename)
-            os.rename(filename, unique_path)
+                unique_filename = f"{uuid.uuid4()}.{ext}"
+                unique_path = os.path.join(DOWNLOAD_FOLDER, unique_filename)
+                os.rename(filename, unique_path)
 
-            # Enviar el archivo al usuario
-            return send_file(unique_path, as_attachment=True, download_name=info['title'] + f'.{ext}')
+                return send_file(unique_path, as_attachment=True, download_name=info['title'] + f'.{ext}')
 
         except Exception as e:
-            return f"Error: {str(e)}"
+            error_message = str(e)
+            if "ffmpeg" in error_message.lower():
+                error_message = "FFmpeg no está instalado. Por favor, instala FFmpeg y vuelve a intentarlo."
+            return f"Error: {error_message}", 500
 
-    return render_template('index.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
